@@ -1,0 +1,34 @@
+La sintaxis para definir una funcion es " ... : ..." del lado izquierdo es un solo parametro y del derecho es la funcion. Estas son aninimas llamadas lamda
+   x: x*2
+
+Para evaluarlas solo hace falta escribir el parametro despues de la funcion
+   double = x: x*2
+   double 3
+
+Para definir funciones con mas de un parametro se de usa una funcion curry parecido a como se hace en haskell
+   mul = a: (b: a*b)
+   mul 3      es una funcion
+   (mul 3) 4  evalua toda la funcion
+   mul 3 4
+
+Podemos definir funciones como la aplicacion parcial de otras
+   foo = mul 2
+
+Las sintaxis para funciones con conjuntos de argumentos son las siguientes
+   mul = s: s.a*s.b
+   mul = {a,b}: a*b
+Donde necesariamante se tienen que evaluar en los nombres correspondientes, no mas, no menos
+
+Se pueden predefinir los valores de las variables en las funciones con "?"
+   mul = {a, b ? 2}: a*b
+   mul {a=3;}
+   mul {a=3; b=4}
+Con esto se evita problemas al mandar menos valores al ser evaluados en la funciones
+
+Para evitar errores al mandar mas valores al ser evaluados en las funones usamos "..." como si fuer aotro parametro, pero si sabemos el nombre que mandaremos podemos usar "...@" antes del conjunto
+   mul = {a, b, ...}: a*b
+   mul = s@{a, b, ...}: a*b*s.c
+
+Podemos guardar todo lo que contenga un archivo usando import
+   import ./test.nix {a=5; trueMsg = "ok";}
+en test.nix esta una funcion que tiene predefinido a b, trueMsg y falseMsg, donde si a > b ? 3 entonces evalua la fiones builtins.trace en el mensaje que pondra en pantalla y el valor booleano que regresara con fines de debugg

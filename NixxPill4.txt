@@ -1,0 +1,44 @@
+Se pueden hacer operaciones aritmeticas en el repl de nix usando "nix repl"
+
+Las operaciones como +, -, * y / pero considerando que cuando / no tiene espacio lo considera como direccion
+
+En builtins se guardan todas las definiciones de las operaciones, tales como el .div para hacer divicion como funcion
+
+Las dobles comillas "" o doble comilla simple sirven para definir las cadenas.
+
+Es posible interpolar expresiones con ${...}. Ejemplo:
+foo="strval"
+"${foo}"
+"${2+3}" Lanza un error por que no se puede convinar cadenas y enteros
+
+Las listas no necesitan comas para separar sus conjuntos, son espaciones:
+[2 "foo" true (2+3)]
+
+Conjuntos de atributos:
+Son claves, que pueden ser cadenas o valores de nix, y sus valores, con elementos separados por un punto y coma ";", como directorios
+Ejemplo"
+  s = {foo = "bar"; ab = "baz"; "123" = "num";}
+
+Se pueden definir recursivamente los conjuntos pero se necesita poner antes de estos que son recursivos con rec
+   rec {a = 3; b = a + 4;}
+
+Las explreciones con if, llevan una estructura bien definida if ... then ... else ... Donde no puede estar nungun campo vacio.
+   a = 3
+   b = 4
+   if a>b then "Yes" else "No"
+
+Para definir varaibles locales usamos expresiones let ... in ...
+   let a = "foo"; in a
+   let a = 4; b = 3; in a + b
+
+No puedes redefinir una variable con let pero si sombrear las variables externas y no se puede hacer referencia a varables en un let fera de este
+   let a = 3; a = 4; in a         #Aqui marcara error
+   let a = 3; in let a = 4; in a  #Aqui no marcara error y regresara 4
+   let a = (let b = 5; in b); in b  #Aqui marcara error
+
+Podemos usar la expresion with ... para agregar las variables de algun conjunto de atributos
+   longName = {a = 3; b = 4;}
+   longName.a + longName.b
+   with longName; a + b
+
+Podemos importar todo un .nix y guardarlo en una variable con "import"

@@ -1,0 +1,19 @@
+Our First Derivation
+
+Las derivaciones deben de tener al menos los siguientes tres atributos:
+    name:     nombre de la derivacion. En nix store los nombres son en formato hash
+    system:   el nombre del sistema donde la derivacion sera construida
+    builder:  El programa binario que construira la derivacion
+
+builtins.currentSystem nos da el nombre de nuestro sistema
+
+d = derivation {name = "myname"; builder = "mybuilder"; system = "mysystem";}
+Esto no construye la derivacion, solo creo el archivo .drv. Nix repl no construye derivaciones a no ser de que se le diga que lo haga
+
+El comando :b en nix repl es especifico para construir una derivacion, si queremos construir nuestro ejemplo con este comando sale un error por no usar bien el system, corrigiendolo con lo anterior
+:? te dice mas comandos que puedes usar
+   d = derivation {name = "myname"; builder = "mybuilder"; system = builtins.currentSystem;}
+
+nix show-derivation ... para ver lo que contiene una derivacion desde la consola
+
+builtins.attrNames regresa una lista con los nombres de las keys de un conjunto de atributos
