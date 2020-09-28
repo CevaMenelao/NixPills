@@ -1,3 +1,3 @@
-set -e
+fset -e
 source $setup
 genericBuild
