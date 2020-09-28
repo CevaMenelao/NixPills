@@ -1,6 +1,6 @@
-Se pueden hacer operaciones aritmeticas en el repl de nix usando "nix repl"
+.Se pueden hacer operaciones aritmeticas en el repl de nix usando "nix repl"
 
-Las operaciones como +, -, * y / pero considerando que cuando / no tiene espacio lo considera como direccion
+Las operaciones como +, -, * y / pero considerando que cuando / sino tiene espacio lo considera como direccion
 
 En builtins se guardan todas las definiciones de las operaciones, tales como el .div para hacer divicion como funcion
 
@@ -11,11 +11,11 @@ foo="strval"
 "${foo}"
 "${2+3}" Lanza un error por que no se puede convinar cadenas y enteros
 
-Las listas no necesitan comas para separar sus conjuntos, son espaciones:
+Las listas no necesitan comas para separar sus conjuntos, son espacios:
 [2 "foo" true (2+3)]
 
 Conjuntos de atributos:
-Son claves, que pueden ser cadenas o valores de nix, y sus valores, con elementos separados por un punto y coma ";", como directorios
+Son claves, que pueden ser cadenas o valores de nix, y sus valores, con elementos separados por un punto y coma ";", como diccionarios
 Ejemplo"
   s = {foo = "bar"; ab = "baz"; "123" = "num";}
 
@@ -42,3 +42,4 @@ Podemos usar la expresion with ... para agregar las variables de algun conjunto 
    with longName; a + b
 
 Podemos importar todo un .nix y guardarlo en una variable con "import"
+

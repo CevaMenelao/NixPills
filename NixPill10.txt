@@ -1,0 +1,63 @@
+Developing with nix-shell
+
+nix-build nos deja en un entorno aislado mientras se construye la derivacion. Mientras que nix-shell nos deja variables de entorno para poder hakear uba derivacion para poder ejecutar la compilacion manualmente.
+
+Usando el comando nix-shell hello.nix, este nos da un entorno de desarrollo aislado
+
+Podemos modificar correindo usando la funcion source 
+
+Modificamos builder usando esta nueva funcion
+
+setup.sh:
+set -e
+source $setup
+genericBuild
+
+donde necesitaremos de setup con todo lo que teniamos en builder pero cada fase en una funcion
+
+builder.sh:
+unset PATH
+for p in $baseInputs $buildInputs; do
+  export PATH=$p/bin${PATH:+:}$PATH
+done
+
+function unpackPhase() {
+  tar -xzf $src
+
+  for d in *; do
+    if [ -d "$d" ]; then
+      cd "$d"
+      break
+    fi
+  done
+}
+
+function configurePhase() {
+  ./configure --prefix=$out
+}
+
+function buildPhase() {
+  make
+}
+
+function installPhase() {
+  make install
+}
+
+function fixupPhase() {
+  find $out -type f -exec patchelf --shrink-rpath '{}' \; -exec strip '{}' \; 2>/dev/null
+}
+
+function genericBuild() {
+  unpackPhase
+  configurePhase
+  buildPhase
+  installPhase
+  fixupPhase
+}
+
+
+
+Evidentemente se podra correr cada una de las fases por separado, aunque si deseamos correr todas las funciones o hacer el constructor generico solo hace falta correro genericBuild
+
+Ahora podemos entrar a la shell de hello con nix-shell hello.nix y source $setup

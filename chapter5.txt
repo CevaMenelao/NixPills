@@ -14,7 +14,7 @@ Para definir funciones con mas de un parametro se de usa una funcion curry parec
 Podemos definir funciones como la aplicacion parcial de otras
    foo = mul 2
 
-Las sintaxis para funciones con conjuntos de argumentos son las siguientes
+Las sintaxis para funciones con conjuntos de atributos son las siguientes
    mul = s: s.a*s.b
    mul = {a,b}: a*b
 Donde necesariamante se tienen que evaluar en los nombres correspondientes, no mas, no menos
@@ -32,3 +32,4 @@ Para evitar errores al mandar mas valores al ser evaluados en las funones usamos
 Podemos guardar todo lo que contenga un archivo usando import
    import ./test.nix {a=5; trueMsg = "ok";}
 en test.nix esta una funcion que tiene predefinido a b, trueMsg y falseMsg, donde si a > b ? 3 entonces evalua la fiones builtins.trace en el mensaje que pondra en pantalla y el valor booleano que regresara con fines de debugg
+

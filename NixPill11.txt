@@ -1,0 +1,17 @@
+Garbage Collector
+Recolector de basura
+
+nix-collector-garbage
+
+nix-env -iA nixos.bsdgames
+
+readlink -f `which fortune`
+
+nix-store -q --roots `which fortune`
+/nix/var/nix/profiles/per-user/enriquead/profile-4-link -> /nix/store/kq4hniw4v43jjn5k2518pw5jccv7rqz9-user-environment
+
+ls /nix/var/nix/profiles/per-user/enriquead/profile-4-link
+
+nix-env --list-generations
+
+para eliminar la dericacion es eliminar result del enlace simbolico de /nix/var/nix/gcroots/auto

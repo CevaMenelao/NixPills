@@ -1,0 +1,36 @@
+nix-repl> add = { a ? 3, b }: a+b
+nix-repl> builtins.functionArgs add
+{ a = true; b = false; }
+
+nix-repl> values = { a = 3; b = 5; c = 10; }
+nix-repl> builtins.intersectAttrs values (builtins.functionArgs add)
+{ a = true; b = false; }
+nix-repl> builtins.intersectAttrs (builtins.functionArgs add) values
+{ a = 3; b = 5; }
+
+nix-repl> callPackage = set: f: f (builtins.intersectAttrs (builtins.functionArgs f) set)
+nix-repl> callPackage values add
+8
+nix-repl> with values; add { inherit a b; }
+8
+
+nix-repl> callPackage = set: f: overrides: f ((builtins.intersectAttrs (builtins.functionArgs f) set) // overrides)
+nix-repl> callPackage values add { }
+8
+nix-repl> callPackage values add { b = 12; }
+15
+
+default sera
+let
+  nixpkgs = import <nixpkgs> {};
+  allPkgs = nixpkgs // pkgs;
+  callPackage = path: overrides:
+    let f = import path;
+    in f ((builtins.intersectAttrs (builtins.functionArgs f) allPkgs) // overrides);
+  pkgs = with nixpkgs; {
+    mkDerivation = import ./autotools.nix nixpkgs;
+    hello = callPackage ./hello.nix { };
+    graphviz = callPackage ./graphviz.nix { };
+    graphvizCore = callPackage ./graphviz.nix { gdSupport = false; };
+  };
+in pkgs

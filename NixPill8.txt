@@ -1,0 +1,116 @@
+Generic Builder
+
+Escrinimos una generalizacion del constructor como un script de Nix
+
+Escribimos primero un builder para un archivo especifico c de la siguiente forma:
+
+hello_builder.sh:
+export PATH="$gnutar/bin:$gcc/bin:$gnumake/bin:$coreutils/bin:$gawk/bin:$gzip/bin:$gnugrep/bin:$gnused/bin:$binutils/bin"
+tar -xzf $src
+cd hello-2.10
+./configure --prefix=$out
+make
+make install
+
+Explicacion de las lineas
+1.- export agrega las rutas al PATH, tiene que ser un string y las rutas tienen que ser separadas por doble puntos
+2.- "tar" sirve oara comprimir y descomprimir, "-xzf" es la instruccion de descomprimir archivos y directorios, luego va la ruta que en este caso es "src"
+3.- hello-2.10 es lo que se acaba de descomprimir del ejemplo en la pill. cd es simple cambio de directorio
+4.- da la ruta debajo del store de nix, no globalmente la salida de la derivacion
+5.- crea
+6.- Instala
+
+Ahora la derivacion la escribimos en un archivo tipo nix:
+
+hello.nix:
+with (import <nixpkgs> {});
+derivation {
+  name = "hello";
+  builder = "${bash}/bin/bash";
+  args = [ ./hello_builder.sh ];
+  inherit gnutar gzip gnumake gcc coreutils gawk gnused gnugrep;
+  binutils = binutils-unwrapped;
+  src = ./hello-2.10.tar.gz;
+  system = builtins.currentSystem;
+}
+
+Explicacion de las lineas:
+1.- whith agrega las variables importadas de nixpkgs
+2.- derivation crea la derivacion con los parametros del conjunto visto
+6.-
+
+Ahora podemos construir nuestra derivacion con la instruccion en consola: "nix-build hello.nix"
+
+En este ejemplo tuvimos que crear un builder para un archivo en especifico. Para evitar esto con cada derivacion se crea un builder generico de la siguiente forma:
+
+builder.sh:
+set -e
+unset PATH
+for p in $buildInputs; do
+  export PATH=$p/bin${PATH:+:}$PATH
+done
+
+tar -xf $src
+
+for d in *; do
+  if [ -d "$d" ]; then
+    cd "$d"
+    break
+  fi
+done
+
+./configure --prefix=$out
+make
+make install
+
+Explicacion:
+1.- "set -e" sale de la compilacion en calquier error
+2.- "unset PATH" inicializa la ruta a una inexistente o vacia
+3,- el ciclo for concatena los elementos de la lista de "$buildInputs" en el PATH
+4.- el segundo siclo for busca sobre lo descomprimido la primer ruta del archivo recien descomprimido, se mueve y cierra el ciclo
+
+Ahora tenemos que redefinir hello.nix para que pueda construirlo nuestro nuevo builder.hs
+
+hello.nix:
+with (import <nixpkgs> {});
+derivation {
+  name = "hello";
+  builder = "${bash}/bin/bash";
+  args = [ ./builder.sh ];
+  buildInputs = [ gnutar gzip gnumake gcc binutils-unwrapped coreutils gawk gnused gnugrep ];
+  src = ./hello-2.10.tar.gz;
+  system = builtins.currentSystem;
+}
+
+Las diferencias son que ahora tenemos que mandar una lista (buildInputs) en vez de agregarla explicitamente con inherit
+
+Ahora crearemos una funcion que acepte un conjunto de atributos donde queramos ser especificos y los demas esten predefinidos para cualquier tipo de derivacion, a esta funcion le llamamos autotools.nix
+
+autotools.nix:
+pkgs: attrs:
+  with pkgs;
+  let defaultAttrs = {
+    builder = "${bash}/bin/bash";
+    args = [ ./builder.sh ];
+    baseInputs = [ gnutar gzip gnumake gcc binutils-unwrapped coreutils gawk gnused gnugrep ];
+    buildInputs = [];
+    system = builtins.currentSystem;
+  };
+  in-
+  derivation (defaultAttrs // attrs)
+
+1.- autotools es una funcion que recibe dos conjutos de atributos como entrada, "pkgs" y "attrs". Generalmente pkgs sera nixpkgs
+2.- def son ls atributos predefinidos dentro de la funcion
+3.- Los elementos de seran sobreescritos por lo que este en attrs si tiene algo similar, sino solo los agregara. Esto lo hace el operador "//" y da prioridad a los elementos del conjunto de la derecha para sobreescribirlos
+4.- Notemos que ahora los elementos que estaban en buildInputs estan en baseInputs, por esta razon modificamos el primer ciclo for de builder.sh para que los agrege de uina forma similar
+
+Finalmente reescribimos hello.nix para definir una funcion mkDerivation utilizando nuestra funcion autotools y agregando los parametros que seran distintos en la derivacion a los que son predefinidos
+
+hello.nix:
+let
+  pkgs = import <nixpkgs> {};
+  mkDerivation = import ./autotools.nix pkgs;
+in mkDerivation {
+  name = "hello";
+  src = ./hello-2.10.tar.gz;
+}

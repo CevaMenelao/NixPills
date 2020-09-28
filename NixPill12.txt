@@ -1,0 +1,18 @@
+Inputs Design Pattern
+Patron de diseno de entradas
+
+Single repository
+
+Descargamos un archivo graphviz-2.38.0.tar.gz que vamos a compilar con nix-build de un archivo adicional .nix
+
+graphviz.nix:
+let
+  pkgs = import <nixpkgs> {};
+  mkDerivation = import ./autotools.nix pkgs;
+in mkDerivation {
+  name = "graphviz";
+  src = ./graphviz-2.38.0.tar.gz;
+}
+
+construimos y tratamos de crear un png simple con
+echo 'graph test { a -- b }'|result/bin/dot -Tpng -o test.png

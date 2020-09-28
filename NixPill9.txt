@@ -1,0 +1,33 @@
+Automatic Rutne Dependencies
+
+Se analiza las dependencias de tiempo de ejecucion y compilacion por el programa GNU hello world, esto para mejorar la construccion evitando las dependencias de tiempo de ejecucuion innecesarias.
+
+Analizando las dependencias de compilacion del paquete GNU hello world
+
+$ nix-instantiate hello.nix
+  nix/store/1b57blq39k603kz0pkri8zf48b7n6fyf-hello.drv
+$nix-store -q --references nix/store/1b57blq39k603kz0pkri8zf48b7n6fyf-hello.drv
+
+Donde podemos ver que solo tiene las derivaciones referenciadas. Son tantas pues son las que estan en nuestro mkDerivation, aunque algunas no sean ocupadas
+
+
+Las fases de nuestro builder.sh hasta el momento son:
+
+1.- configurar el entorno
+2.- desempaquetado (los dos for), donde nos cambiamos de directorio a uno temporal
+3.- Cambiamos de la raiz al derectorio recien descomprimido
+4.- configuracion con ./configure
+5.- Construimos con make
+6.- Instalamos con make install
+
+Finalmente agergamos una nueva fase despues de todas estas
+
+find $out -type f -exec patchelf --shrink-rpath '{}' \; -exec strip '{}' \; 2>/dev/null
+
+"find" es la funcion buscar en el directorio que tenga a la derecha
+"-type f" le indica a find que sean unicamente archivos
+"-exec" le dice a find que a cada archivo encontrado le haga lo que teiene a la derecha, en este caso patchelf --shrink-rpath y strip
+"{}\" es el fin de exec
+"2>/dev/null" manda a todo lo que sea un error al vacio
+
+Reconstruimos hello.nix y comparamos sus referencias con lo anterior. Considerando que tuvimos que agregar estas funciones a baseInputs de autotools.nix.
