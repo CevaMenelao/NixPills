@@ -1,0 +1,90 @@
+Nix Store Paths
+algoritmo utilizado por Nix para calcular las rutas de almacenamiento y también introdujimos rutas de almacenamiento de salida fija
+
+
+creamos un archivo myfile:
+Que tenga solo my content con
+echo mycontent > myfile
+
+en nix repl
+derivation { system = "x86_64-linux"; builder = ./myfile; name = "foo"; }
+«derivation /nix/store/y4h73bmrc9ii5bxg6i7ck6hsf5gqv8ck-foo.drv»
+
+
+nix show-derivation /nix/store/y4h73bmrc9ii5bxg6i7ck6hsf5gqv8ck-foo.drv
+{
+  "/nix/store/y4h73bmrc9ii5bxg6i7ck6hsf5gqv8ck-foo.drv": {
+    "outputs": {
+      "out": {
+        "path": "/nix/store/hs0yi5n5nw6micqhy8l1igkbhqdkzqa1-foo"
+      }
+    },
+    "inputSrcs": [
+      "/nix/store/xv2iccirbrvklck36f1g7vldn5v58vck-myfile"
+    ],
+    "inputDrvs": {},
+    "platform": "x86_64-linux",
+    "builder": "/nix/store/xv2iccirbrvklck36f1g7vldn5v58vck-myfile",
+    "args": [],
+    "env": {
+      "builder": "/nix/store/xv2iccirbrvklck36f1g7vldn5v58vck-myfile",
+      "name": "foo",
+      "out": "/nix/store/hs0yi5n5nw6micqhy8l1igkbhqdkzqa1-foo",
+      "system": "x86_64-linux"
+    }
+  }
+}
+
+nix-store --dump myfile|sha256sum
+nix-hash --type sha256 myfile
+2bfef67de873c54551d884fdab3055d84d573e654efa79db3c0d7b98883f9ee3
+
+echo -n "source:sha256:2bfef67de873c54551d884fdab3055d84d573e654efa79db3c0d7b98883f9ee3:/nix/store:myfile" > myfile.str
+
+nix-hash --type sha256 --truncate --base32 --flat myfile.str
+xv2iccirbrvklck36f1g7vldn5v58vck
+
+cp -f /nix/store/y4h73bmrc9ii5bxg6i7ck6hsf5gqv8ck-foo.drv myout.drv
+sed -i 's,/nix/store/hs0yi5n5nw6micqhy8l1igkbhqdkzqa1-foo,,g' myout.drv
+
+
+$ sha256sum myout.drv
+1bdc41b9649a0d59f270a92d69ce6b5af0bc82b46cb9d9441ebc6620665f40b5  myout.drv
+$ echo -n "output:out:sha256:1bdc41b9649a0d59f270a92d69ce6b5af0bc82b46cb9d9441ebc6620665f40b5:/nix/store:foo" > myout.str
+$ nix-hash --type sha256 --truncate --base32 --flat myout.str
+hs0yi5n5nw6micqhy8l1igkbhqdkzqa1
+
+
+$ echo mycontent > myfile
+$ sha256sum myfile
+f3f3c4763037e059b4d834eaf68595bbc02ba19f6d2a500dce06d124e2cd99bb  myfile
+nix-repl> derivation { name = "bar"; system = "x86_64-linux"; builder = "none"; outputHashMode = "flat"; outputHashAlgo = "sha256"; outputHash = "f3f3c4763037e059b4d834eaf68595bbc02ba19f6d2a500dce06d124e2cd99bb"; }
+«derivation /nix/store/ymsf5zcqr9wlkkqdjwhqllgwa97rff5i-bar.drv»
+
+
+$ nix show-derivation /nix/store/ymsf5zcqr9wlkkqdjwhqllgwa97rff5i-bar.drv
+{
+  "/nix/store/ymsf5zcqr9wlkkqdjwhqllgwa97rff5i-bar.drv": {
+    "outputs": {
+      "out": {
+        "path": "/nix/store/a00d5f71k0vp5a6klkls0mvr1f7sx6ch-bar",
+        "hashAlgo": "sha256",
+        "hash": "f3f3c4763037e059b4d834eaf68595bbc02ba19f6d2a500dce06d124e2cd99bb"
+      }
+    },
+    "inputSrcs": [],
+    "inputDrvs": {},
+    "platform": "x86_64-linux",
+    "builder": "none",
+    "args": [],
+    "env": {
+      "builder": "none",
+      "name": "bar",
+      "out": "/nix/store/a00d5f71k0vp5a6klkls0mvr1f7sx6ch-bar",
+      "outputHash": "f3f3c4763037e059b4d834eaf68595bbc02ba19f6d2a500dce06d124e2cd99bb",
+      "outputHashAlgo": "sha256",
+      "outputHashMode": "flat",
+      "system": "x86_64-linux"
+    }
+  }
+}

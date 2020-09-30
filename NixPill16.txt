@@ -1,0 +1,19 @@
+myrelease.nix:
+
+{ system ? builtins.currentSystem }:
+
+let pkgs = import <nixpkgs> { inherit system; };
+...
+
+
+nix-build -A psmisc --argstr system i686-linux
+
+$ nix repl
+nix-repl> pkgs = import <nixpkgs> {}
+nix-repl> pkgs.config
+{ }
+nix-repl> pkgs = import <nixpkgs> { config = { foo = "bar"; }; }
+nix-repl> pkgs.config
+{ foo = "bar"; }
+
+Se creo el archivo example16_4.nix

@@ -1,0 +1,51 @@
+Nixpkgs Overriding Packages
+
+$ nix-repl
+nix-repl> :l <nixpkgs>
+
+nix-repl> :b graphviz.override { xlibs = null; }
+
+
+
+pkgs = import <nixpkgs> {};
+pkgs.graphviz = pkgs.graphviz.override { xlibs = null; };
+build(pkgs.P)
+
+
+nix-repl> fix = f: let result = f result; in result
+nix-repl> pkgs = self: { a = 3; b = 4; c = self.a+self.b; }
+nix-repl> fix pkgs
+{ a = 3; b = 4; c = 7; }
+
+fix pkgs      f = self: { a = 3; b = 4; c = self.a+self.b; }
+              let result = f result, esto esta bien pues aun no se evalua y no se genera bucle infinito, lazy evaluation
+              in result, ahora si comienza a evaluar
+
+              result = f result
+              result = { a = 3; b = 4; c = (result).a+(result).b; }
+              result = { a = 3; b = 4; c = { a = 3; b = 4; c = (result).a+(result).b; }.a
+                                                             +{ a = 3; b = 4; c = (result).a+(result).b; }.b; }
+              result = { a = 3; b = 4; c = 3+4; }
+              { a = 3; b = 4; c = 7; }
+
+
+nix-repl> overrides = { a = 1; b = 2; }
+nix-repl> let newpkgs = pkgs (newpkgs // overrides); in newpkgs
+{ a = 3; b = 4; c = 3; }
+nix-repl> let newpkgs = pkgs (newpkgs // overrides); in newpkgs // overrides
+{ a = 1; b = 2; c = 3; }
+
+in newpkgs
+newpkgs =   pkgs (newpkgs // overrides)
+            { a = 3; b = 4; c = (newpkgs // overrides).a + (newpkgs // overrides).b; }
+# self es (newpkgs // overrides)
+            { a = 3; b = 4; c = ({...1...} // { a = 1; b = 2; }).a + ({...1...} // { a = 1; b = 2; }).b; }
+#se evaluan ambos conjuntos donde por facilidad {...1...} = { a = 3; b = 4; c = (newpkgs // overrides).a + (newpkgs // overrides).b; }, como ambos ya tienen elementos a y b, se remplaza por el operador //
+            { a = 3; b = 4; c = { a = 1; b = 2; ...2...}.a + { a = 1; b = 2; ...2...}.b; }
+# Por simplicidad {...2...} es c = (newpkgs // overrides).a + (newpkgs // overrides).b; }
+            { a = 3; b = 4; c = 1 + 2; }
+            { a = 3; b = 4; c = 3; }
+
+in newpkgs // overrides # usando lo pasado y sabiendo que se evaluan ambos conjuntos antes de unirlos
+newpkgs // overrides =  { a = 3; b = 4; c = 3; }//{ a = 1; b = 2; }
+                        { a = 1 ; b = 2; c = 3; }
